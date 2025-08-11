@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Rwanda Safe Pay",
+    "slug": "rwanda-safe-pay",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2E7D32"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rwandasafepay.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to provide emergency SOS services and find nearby security agents.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access to provide emergency SOS services and find nearby security agents.",
+        "NSCameraUsageDescription": "This app needs camera access to capture photos for incident reports.",
+        "NSContactsUsageDescription": "This app needs contacts access to set up emergency contacts.",
+        "NSMicrophoneUsageDescription": "This app needs microphone access for emergency voice messages."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2E7D32"
+      },
+      "package": "com.rwandasafepay.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_CONTACTS",
+        "WRITE_CONTACTS",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-location",
+      "expo-notifications",
+      "expo-contacts",
+      "expo-camera",
+      "expo-secure-store"
+    ],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#2E7D32"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:3000/api",
+      "firebaseConfig": {
+        "apiKey": "your-api-key",
+        "authDomain": "your-project.firebaseapp.com",
+        "projectId": "your-project-id",
+        "storageBucket": "your-project.appspot.com",
+        "messagingSenderId": "123456789",
+        "appId": "your-app-id"
+      }
+    }
+  }
+}
