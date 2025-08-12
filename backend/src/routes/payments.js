@@ -1,5 +1,8 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const Payment = require('../models/Payment');
+const User = require('../models/User');
+const { verifyToken } = require('../middleware/auth');
 const router = express.Router();
 
 /**
@@ -7,7 +10,7 @@ const router = express.Router();
  * @desc    Make a contribution payment for Irondo services
  * @access  Private
  */
-router.post('/contribute', [
+router.post('/contribute', verifyToken, [
   body('amount').isFloat({ min: 100 }), // Minimum 100 RWF
   body('paymentMethod').isIn(['mobile_money', 'bank_card', 'ussd']),
   body('phoneNumber').isMobilePhone('rw-RW'),
@@ -31,43 +34,57 @@ router.post('/contribute', [
       description
     } = req.body;
 
-    // TODO: Get user from JWT token
-    const userId = 'temp-user-id';
+    // Get user from JWT token
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
 
-    // Create payment transaction
-    const transaction = {
-      id: `txn_${Date.now()}`,
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User account not found'
+      });
+    }
+
+    // Validate payment data
+    const paymentData = {
       userId,
       amount,
-      currency: 'RWF',
       paymentMethod,
       phoneNumber,
       contributionType,
-      description: description || `${contributionType} Irondo contribution`,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      processedAt: null,
-      reference: `SP${Date.now()}`
+      description: description || `${contributionType} Irondo contribution`
     };
 
-    // TODO: Process payment with payment gateway
-    // TODO: Save transaction to database
-    // TODO: Send confirmation SMS
-    // TODO: Update user contribution history
+    const validationErrors = Payment.validatePaymentData(paymentData);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        error: 'Payment validation failed',
+        details: validationErrors
+      });
+    }
 
-    console.log('💰 PAYMENT INITIATED:', transaction);
+    // Create payment transaction
+    const payment = await Payment.create(paymentData);
+
+    // TODO: Process payment with payment gateway (MTN Mobile Money, Airtel Money)
+    // For now, we'll simulate payment processing
+    console.log('💰 PAYMENT INITIATED:', payment.toObject());
+
+    // TODO: Send confirmation SMS
+    // TODO: Integrate with actual payment gateway
 
     res.status(201).json({
       message: 'Payment initiated successfully',
       transaction: {
-        id: transaction.id,
-        reference: transaction.reference,
-        amount: transaction.amount,
-        status: 'pending'
+        id: payment.id,
+        reference: payment.reference,
+        amount: payment.amount,
+        status: payment.status,
+        createdAt: payment.createdAt
       },
       paymentInstructions: {
         message: `Please complete payment of ${amount} RWF using ${paymentMethod}`,
-        reference: transaction.reference,
+        reference: payment.reference,
         phoneNumber: phoneNumber
       }
     });
@@ -86,41 +103,48 @@ router.post('/contribute', [
  * @desc    Get user's payment history
  * @access  Private
  */
-router.get('/history', async (req, res) => {
+router.get('/history', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, status, contributionType } = req.query;
 
-    // TODO: Get user from JWT token
-    // TODO: Fetch payment history from database with filters
+    // Get user from JWT token
+    const userId = req.user.userId;
 
-    const payments = [
-      {
-        id: 'txn_1691234567890',
-        amount: 2000,
-        currency: 'RWF',
-        contributionType: 'monthly',
-        status: 'completed',
-        createdAt: '2024-08-01T10:00:00Z',
-        reference: 'SP1691234567890'
-      },
-      {
-        id: 'txn_1691234567891',
-        amount: 5000,
-        currency: 'RWF',
-        contributionType: 'quarterly',
-        status: 'completed',
-        createdAt: '2024-07-15T14:30:00Z',
-        reference: 'SP1691234567891'
-      }
-    ];
+    // Fetch payment history from database
+    let payments = await Payment.findByUserId(userId, parseInt(limit) * parseInt(page));
+
+    // Apply filters if provided
+    if (status) {
+      payments = payments.filter(payment => payment.status === status);
+    }
+
+    if (contributionType) {
+      payments = payments.filter(payment => payment.contributionType === contributionType);
+    }
+
+    // Paginate results
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedPayments = payments.slice(startIndex, endIndex);
 
     res.json({
-      payments,
+      payments: paginatedPayments.map(payment => ({
+        id: payment.id,
+        amount: payment.amount,
+        currency: payment.currency,
+        contributionType: payment.contributionType,
+        status: payment.status,
+        createdAt: payment.createdAt,
+        processedAt: payment.processedAt,
+        reference: payment.reference,
+        description: payment.description,
+        paymentMethod: payment.paymentMethod
+      })),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
         total: payments.length,
-        totalPages: Math.ceil(payments.length / limit)
+        totalPages: Math.ceil(payments.length / parseInt(limit))
       }
     });
 

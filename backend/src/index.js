@@ -4,7 +4,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const { initializeFirebase } = require('./config/firebase');
 require('dotenv').config();
+
+// Initialize Firebase
+initializeFirebase();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

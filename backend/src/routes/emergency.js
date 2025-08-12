@@ -1,5 +1,8 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const EmergencyAlert = require('../models/EmergencyAlert');
+const User = require('../models/User');
+const { verifyToken, requireSecurityAgent } = require('../middleware/auth');
 const router = express.Router();
 
 /**
@@ -7,7 +10,7 @@ const router = express.Router();
  * @desc    Trigger SOS emergency alert
  * @access  Private
  */
-router.post('/sos', [
+router.post('/sos', verifyToken, [
   body('latitude').isFloat({ min: -90, max: 90 }),
   body('longitude').isFloat({ min: -180, max: 180 }),
   body('emergencyType').isIn(['medical', 'security', 'fire', 'general']),
@@ -29,40 +32,61 @@ router.post('/sos', [
       description
     } = req.body;
 
-    // TODO: Get user from JWT token
-    const userId = 'temp-user-id';
+    // Get user from JWT token
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
 
-    // Create emergency alert record
-    const emergencyAlert = {
-      id: `sos_${Date.now()}`,
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User account not found'
+      });
+    }
+
+    // Create emergency alert data
+    const alertData = {
       userId,
       location: {
         latitude,
         longitude,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        address: `${user.location.sector}, ${user.location.district}` // Approximate address
       },
       emergencyType,
       description: description || '',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      respondedAt: null,
-      responderId: null
+      priority: emergencyType === 'medical' ? 'high' : 'medium'
     };
 
-    // TODO: Save to database
-    // TODO: Find nearby security agents within 2km radius
+    // Validate alert data
+    const validationErrors = EmergencyAlert.validateAlertData(alertData);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        error: 'Alert validation failed',
+        details: validationErrors
+      });
+    }
+
+    // Create emergency alert
+    const emergencyAlert = await EmergencyAlert.create(alertData);
+
+    // Find nearby security agents within 2km radius
+    const nearbyAgents = await User.findByDistrict(user.location.district);
+    const securityAgents = nearbyAgents.filter(agent => agent.role === 'security_agent');
+
     // TODO: Send push notifications to nearby agents
     // TODO: Send SMS alerts to emergency contacts
-    // TODO: Log emergency event
+    // TODO: Integrate with real-time notification system
 
-    console.log('🚨 EMERGENCY ALERT TRIGGERED:', emergencyAlert);
+    console.log('🚨 EMERGENCY ALERT TRIGGERED:', emergencyAlert.toObject());
 
     res.status(201).json({
       message: 'Emergency alert sent successfully',
       alertId: emergencyAlert.id,
-      status: 'active',
+      status: emergencyAlert.status,
+      location: emergencyAlert.location,
       estimatedResponseTime: '5-10 minutes',
-      nearbyAgents: 3 // TODO: Calculate actual nearby agents
+      nearbyAgents: securityAgents.length,
+      createdAt: emergencyAlert.createdAt
     });
 
   } catch (error) {
