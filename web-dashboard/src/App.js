@@ -5,8 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Import components (to be created)
-// import Dashboard from './components/Dashboard';
+// Import components
+import Dashboard from './components/Dashboard';
 // import Login from './components/auth/Login';
 // import Users from './components/Users';
 // import Payments from './components/Payments';
@@ -55,17 +55,10 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-// Placeholder components
-const Dashboard = () => (
-  <PlaceholderPage 
-    title="Admin Dashboard" 
-    description="Monitor community safety activities, emergency alerts, and payment transactions across Kigali districts."
-  />
-);
-
+// Placeholder components for unimplemented features
 const Login = () => (
-  <PlaceholderPage 
-    title="Administrator Login" 
+  <PlaceholderPage
+    title="Administrator Login"
     description="Secure access for local authorities and security administrators."
   />
 );

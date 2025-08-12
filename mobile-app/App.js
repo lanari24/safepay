@@ -7,16 +7,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider as PaperProvider } from 'react-native-paper';
 import FlashMessage from 'react-native-flash-message';
 
-// Import screens (to be created)
-// import HomeScreen from './src/screens/HomeScreen';
-// import PaymentScreen from './src/screens/PaymentScreen';
-// import EmergencyScreen from './src/screens/EmergencyScreen';
+// Import screens
+import HomeScreen from './src/screens/HomeScreen';
+import PaymentScreen from './src/screens/PaymentScreen';
+import EmergencyScreen from './src/screens/EmergencyScreen';
 // import ForumScreen from './src/screens/ForumScreen';
 // import ProfileScreen from './src/screens/ProfileScreen';
 // import LoginScreen from './src/screens/auth/LoginScreen';
 // import RegisterScreen from './src/screens/auth/RegisterScreen';
 
-// Temporary placeholder screens
+// Temporary placeholder screens for unimplemented features
 const PlaceholderScreen = ({ title }) => (
   <SafeAreaView style={styles.container}>
     <View style={styles.content}>
@@ -35,9 +35,6 @@ const PlaceholderScreen = ({ title }) => (
   </SafeAreaView>
 );
 
-const HomeScreen = () => <PlaceholderScreen title="Home Dashboard" />;
-const PaymentScreen = () => <PlaceholderScreen title="Irondo Payments" />;
-const EmergencyScreen = () => <PlaceholderScreen title="Emergency SOS" />;
 const ForumScreen = () => <PlaceholderScreen title="Community Forum" />;
 const ProfileScreen = () => <PlaceholderScreen title="User Profile" />;
 
